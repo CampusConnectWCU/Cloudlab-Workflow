@@ -1,0 +1,70 @@
+name: Cloudlab Automation
+
+on:
+  workflow_call:
+    inputs:
+      cloudlab_pem:
+        description: 'Base64 encoded Cloudlab PEM file'
+        required: true
+        type: string
+      profile_name:
+        description: 'Name of the Cloudlab profile to use'
+        required: true
+        type: string
+      experiment_name:
+        description: 'Name for the experiment'
+        required: true
+        type: string
+      node_count:
+        description: 'Number of nodes to provision'
+        required: true
+        type: number
+        default: 1
+      username:
+        description: 'SSH username (optional)'
+        required: false
+        type: string
+      is_deployed:
+        description: 'Skip initialization if nodes are already deployed'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  cloudlab-setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Setup Cloudlab environment
+      run: |
+        # Decode the PEM file
+        echo "${{ inputs.cloudlab_pem }}" | base64 -d > cloudlab.pem
+        chmod 600 cloudlab.pem
+        
+        # Set environment variables for SSH
+        echo "CERT=$(pwd)/cloudlab.pem" >> $GITHUB_ENV
+        echo "USER=${{ inputs.username || github.actor }}" >> $GITHUB_ENV
+        
+    - name: Run Cloudlab automation
+      run: |
+        python init_node.py \
+          --ip "${{ inputs.experiment_name }}" \
+          --profile "${{ inputs.profile_name }}" \
+          --username "${{ inputs.username || github.actor }}" \
+          ${{ inputs.is_deployed && '--isDeployed' || '' }}
+          
+    - name: Cleanup
+      run: |
+        rm -f cloudlab.pem 
