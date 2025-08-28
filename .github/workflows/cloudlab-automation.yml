@@ -20,11 +20,6 @@ on:
         description: 'SSH username (optional)'
         required: false
         type: string
-      is_deployed:
-        description: 'Skip initialization if nodes are already deployed'
-        required: false
-        type: boolean
-        default: false
     secrets:
       cloudlab_pem:
         description: 'Base64 encoded Cloudlab PEM file'
@@ -62,8 +57,7 @@ jobs:
         python init_node.py \
           --ip "${{ inputs.experiment_name }}" \
           --profile "${{ inputs.profile_name }}" \
-          --username "${{ inputs.username || github.actor }}" \
-          ${{ inputs.is_deployed && '--isDeployed' || '' }}
+          --username "${{ inputs.username || github.actor }}" 
           
     - name: Cleanup
       run: |
