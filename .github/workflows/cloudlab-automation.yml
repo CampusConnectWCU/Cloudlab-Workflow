@@ -3,10 +3,6 @@ name: Cloudlab Automation
 on:
   workflow_call:
     inputs:
-      cloudlab_pem:
-        description: 'Base64 encoded Cloudlab PEM file'
-        required: true
-        type: string
       profile_name:
         description: 'Name of the Cloudlab profile to use'
         required: true
@@ -29,6 +25,10 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      cloudlab_pem:
+        description: 'Base64 encoded Cloudlab PEM file'
+        required: true
 
 jobs:
   cloudlab-setup:
@@ -50,7 +50,7 @@ jobs:
     - name: Setup Cloudlab environment
       run: |
         # Decode the PEM file
-        echo "${{ inputs.cloudlab_pem }}" | base64 -d > cloudlab.pem
+        echo "${{ secrets.cloudlab_pem }}" | base64 -d > cloudlab.pem
         chmod 600 cloudlab.pem
         
         # Set environment variables for SSH
